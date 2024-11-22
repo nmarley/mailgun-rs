@@ -3,11 +3,7 @@ use mailgun_rs::{EmailAddress, Mailgun, MailgunRegion, Message};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::env;
-use std::sync::Mutex;
-
-// TODO: Use tokio Mutex b/c current code doesn't work b/c of the std Mutex
-// which isn't async aware
-// use tokio::sync::Mutex;
+use tokio::sync::Mutex;
 
 static MAILGUN_CLIENT: OnceCell<Mutex<Mailgun>> = OnceCell::new();
 
@@ -48,7 +44,7 @@ async fn send_html(recipient: &str) {
     let sender = EmailAddress::name_address("no-reply", "no-reply@hackerth.com");
 
     if let Some(client) = MAILGUN_CLIENT.get() {
-        let mailgun_client = client.lock().unwrap();
+        let mailgun_client = client.lock().await;
 
         match mailgun_client
             .async_send(MailgunRegion::US, &sender, message)
