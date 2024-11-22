@@ -1,5 +1,5 @@
 use dotenv::dotenv;
-use mailgun_rs::{EmailAddress, Mailgun, Message};
+use mailgun_rs::{EmailAddress, Mailgun, MailgunRegion, Message};
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use std::env;
 
@@ -74,7 +74,7 @@ fn send_mail_confirmation(order: &Json<Order<'_>>) {
     };
     let sender = EmailAddress::name_address("no-reply", "no-reply@hackerth.com");
 
-    match client.send(&sender, message) {
+    match client.send(MailgunRegion::US, &sender, message) {
         Ok(_) => {
             println!("successful");
         }
@@ -107,7 +107,7 @@ async fn send_mail_confirmation_async(order: &Json<Order<'_>>) {
     };
     let sender = EmailAddress::name_address("no-reply", "no-reply@hackerth.com");
 
-    match client.async_send(&sender, message).await {
+    match client.async_send(MailgunRegion::US, &sender, message).await {
         Ok(_) => {
             println!("successful");
         }
