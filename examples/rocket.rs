@@ -29,10 +29,9 @@ pub struct Order<'a> {
 #[post("/order/save", format = "application/json", data = "<order>")]
 pub fn save_order(order: Json<Order<'_>>) -> Json<MailConfirmation> {
     // take the order and use the information to send an email
-    let res = tokio::task::block_in_place(|| {
+    tokio::task::block_in_place(|| {
         send_mail_confirmation(&order);
     });
-    println!("{:?}", res);
 
     let confirmation = MailConfirmation {
         message: "Mail sent successfully!",
