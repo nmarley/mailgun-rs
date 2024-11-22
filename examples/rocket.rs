@@ -1,12 +1,10 @@
+use dotenv::dotenv;
+use mailgun_rs::{EmailAddress, Mailgun, Message};
+use rocket::serde::{json::Json, Deserialize, Serialize};
+use std::env;
+
 #[macro_use]
 extern crate rocket;
-
-use rocket::serde::{json::Json, Deserialize, Serialize};
-
-use mailgun_rs::{EmailAddress, Mailgun, Message};
-
-use dotenv::dotenv;
-use std::env;
 
 #[get("/")]
 fn hello() -> String {
@@ -54,8 +52,12 @@ pub async fn save_order_async(order: Json<Order<'_>>) -> Json<MailConfirmation> 
 }
 
 fn send_mail_confirmation(order: &Json<Order<'_>>) {
-    let api_key = env::var("MAILGUN_PRIVATE_API_KEY").expect("MAILGUN_PRIVATE_API_KEY not set").to_string();
-    let domain = env::var("MAILGUN_DOMAIN").expect("MAILGUN_DOMAIN not set").to_string();
+    let api_key = env::var("MAILGUN_PRIVATE_API_KEY")
+        .expect("MAILGUN_PRIVATE_API_KEY not set")
+        .to_string();
+    let domain = env::var("MAILGUN_DOMAIN")
+        .expect("MAILGUN_DOMAIN not set")
+        .to_string();
 
     // send mail
     let recipient = EmailAddress::address(order.recipient);
@@ -83,8 +85,12 @@ fn send_mail_confirmation(order: &Json<Order<'_>>) {
 }
 
 async fn send_mail_confirmation_async(order: &Json<Order<'_>>) {
-    let api_key = env::var("MAILGUN_PRIVATE_API_KEY").expect("MAILGUN_PRIVATE_API_KEY not set").to_string();
-    let domain = env::var("MAILGUN_DOMAIN").expect("MAILGUN_DOMAIN not set").to_string();
+    let api_key = env::var("MAILGUN_PRIVATE_API_KEY")
+        .expect("MAILGUN_PRIVATE_API_KEY not set")
+        .to_string();
+    let domain = env::var("MAILGUN_DOMAIN")
+        .expect("MAILGUN_DOMAIN not set")
+        .to_string();
 
     // send mail
     let recipient = EmailAddress::address(order.recipient);

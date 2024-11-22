@@ -1,17 +1,42 @@
+use dotenv::dotenv;
 use mailgun_rs::{EmailAddress, Mailgun, MailgunRegion, Message};
+use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::env;
+use std::sync::Mutex;
 
-fn main() {
+// TODO: Use tokio Mutex b/c current code doesn't work b/c of the std Mutex
+// which isn't async aware
+// use tokio::sync::Mutex;
+
+static MAILGUN_CLIENT: OnceCell<Mutex<Mailgun>> = OnceCell::new();
+
+#[tokio::main]
+async fn main() {
+    dotenv().ok();
+
     let domain = &env::var("MAILGUN_DOMAIN").expect("MAILGUN_DOMAIN not set");
     let key = &env::var("MAILGUN_API_KEY").expect("MAILGUN_API_KEY not set");
     let recipient = "dongrium@gmail.com";
 
-    send_html(recipient, key, domain);
-    send_template(recipient, key, domain);
+    initialize_mailgun(key, domain);
+
+    send_html(recipient).await;
+    send_template(recipient, key, domain).await;
 }
 
-fn send_html(recipient: &str, key: &str, domain: &str) {
+fn initialize_mailgun(api_key: &str, domain: &str) {
+    let mailgun_client = Mailgun {
+        api_key: api_key.to_string(),
+        domain: domain.to_string(),
+    };
+
+    MAILGUN_CLIENT
+        .set(Mutex::new(mailgun_client))
+        .expect("Mailgun client can only be initialized once");
+}
+
+async fn send_html(recipient: &str) {
     let recipient = EmailAddress::address(recipient);
     let message = Message {
         to: vec![recipient],
@@ -19,22 +44,29 @@ fn send_html(recipient: &str, key: &str, domain: &str) {
         html: String::from("<h1>hello from mailgun</h1>"),
         ..Default::default()
     };
-    let client = Mailgun {
-        api_key: String::from(key),
-        domain: String::from(domain),
-    };
+
     let sender = EmailAddress::name_address("no-reply", "no-reply@hackerth.com");
-    match client.send(MailgunRegion::US, &sender, message) {
-        Ok(_) => {
-            println!("successful");
+
+    if let Some(client) = MAILGUN_CLIENT.get() {
+        let mailgun_client = client.lock().unwrap();
+
+        match mailgun_client
+            .async_send(MailgunRegion::US, &sender, message)
+            .await
+        {
+            Ok(_) => {
+                println!("successful");
+            }
+            Err(err) => {
+                println!("Error: {err}");
+            }
         }
-        Err(err) => {
-            println!("Error: {err}");
-        }
+    } else {
+        println!("Mailgun client is not initialized");
     }
 }
 
-fn send_template(recipient: &str, key: &str, domain: &str) {
+async fn send_template(recipient: &str, key: &str, domain: &str) {
     let mut template_vars = HashMap::new();
     template_vars.insert(String::from("firstname"), String::from("Dongri"));
     let recipient = EmailAddress::address(recipient);
@@ -50,7 +82,7 @@ fn send_template(recipient: &str, key: &str, domain: &str) {
         domain: String::from(domain),
     };
     let sender = EmailAddress::name_address("no-reply", "no-reply@hackerth.com");
-    match client.send(MailgunRegion::US, &sender, message) {
+    match client.async_send(MailgunRegion::US, &sender, message).await {
         Ok(_) => {
             println!("successful");
         }
@@ -59,5 +91,3 @@ fn send_template(recipient: &str, key: &str, domain: &str) {
         }
     }
 }
-
-// MAILGUN_DOMAIN=xxx MAILGUN_API_KEY=xxx-xxx-xxx cargo run --package mailgun-rs --example basic
