@@ -52,8 +52,8 @@ pub async fn save_order_async(order: Json<Order<'_>>) -> Json<MailConfirmation> 
 }
 
 fn send_mail_confirmation(order: &Json<Order<'_>>) {
-    let api_key = env::var("MAILGUN_PRIVATE_API_KEY")
-        .expect("MAILGUN_PRIVATE_API_KEY not set")
+    let api_key = env::var("MAILGUN_API_KEY")
+        .expect("MAILGUN_API_KEY not set")
         .to_string();
     let domain = env::var("MAILGUN_DOMAIN")
         .expect("MAILGUN_DOMAIN not set")
@@ -85,8 +85,8 @@ fn send_mail_confirmation(order: &Json<Order<'_>>) {
 }
 
 async fn send_mail_confirmation_async(order: &Json<Order<'_>>) {
-    let api_key = env::var("MAILGUN_PRIVATE_API_KEY")
-        .expect("MAILGUN_PRIVATE_API_KEY not set")
+    let api_key = env::var("MAILGUN_API_KEY")
+        .expect("MAILGUN_API_KEY not set")
         .to_string();
     let domain = env::var("MAILGUN_DOMAIN")
         .expect("MAILGUN_DOMAIN not set")
