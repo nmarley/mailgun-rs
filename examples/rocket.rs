@@ -63,14 +63,11 @@ fn send_mail_confirmation(order: &Json<Order<'_>>) {
     let message = Message {
         to: vec![recipient],
         subject: String::from("Order Confirmation"),
-        html: String::from(format!("<b>Order Name: {}</b>", order.name)),
+        html: format!("<b>Order Name: {}</b>", order.name),
         ..Default::default()
     };
 
-    let client = Mailgun {
-        api_key: String::from(api_key),
-        domain: String::from(domain),
-    };
+    let client = Mailgun { api_key, domain };
     let sender = EmailAddress::name_address("no-reply", "no-reply@hackerth.com");
 
     match client.send(MailgunRegion::US, &sender, message) {
@@ -96,14 +93,11 @@ async fn send_mail_confirmation_async(order: &Json<Order<'_>>) {
     let message = Message {
         to: vec![recipient],
         subject: String::from("Order Confirmation Async"),
-        html: String::from(format!("<b>Order Name: {}</b>", order.name)),
+        html: format!("<b>Order Name: {}</b>", order.name),
         ..Default::default()
     };
 
-    let client = Mailgun {
-        api_key: String::from(api_key),
-        domain: String::from(domain),
-    };
+    let client = Mailgun { api_key, domain };
     let sender = EmailAddress::name_address("no-reply", "no-reply@hackerth.com");
 
     match client.async_send(MailgunRegion::US, &sender, message).await {
